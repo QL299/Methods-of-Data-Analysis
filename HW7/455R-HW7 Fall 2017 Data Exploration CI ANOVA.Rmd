@@ -1,0 +1,239 @@
+# Assignment 7 - Data Exploration and Confidence Intervals
+**Created by John Palowitch, UNC Chapel Hill**
+
+**Edited - Robin Cunningham**
+
+#Amanda Liu PID:730042603
+```{r}
+library(tidyverse)
+```
+
+
+1. In this problem you will practice plotting density curves in **R**. (I saved you the trouble of a possible Google Search, by searching myself and finding this page: [Robin's Google Search Result](http://www.statmethods.net/advgraphs/probability.html) You may find the first gray box of code on this page very helpful. This is how a lot of the world's coding is done!)
+
+    a. Plot the *Standard* Normal density curve on the range [-4, 4]. Label your axes, and title the plot "Comparing t and Standard Normal densities".
+    b. Overlay the density of two $t$-distributions: one with 5 degrees of freedom, and the other with 10 degrees of freedom. Color one $t$-curve blue and the other red.
+    c. Comment on the plot. What does it suggest happens to the $t$-distribution as degrees of freedom increase? Why does this make sense, considering how and why we use the $t$-distribution?
+  
+```{r p2q1, eval = TRUE} 
+xseq<-seq(-4,4,length=100)
+densities<-dnorm(xseq)
+
+degf <- c(5, 10)
+colors <- c("blue","red")
+labels <- c("df=5", "df=10", "normal")
+plot(xseq, densities,type="l", lty=2, xlab = "", ylab = "Density", main="Comparing t and Standard Normal densities", cex.axis=.8)
+for (i in 1:4){
+  lines(xseq, dt(xseq,degf[i]), lwd=2, col=colors[i])
+}
+
+legend("topright", inset=.05, title="Distributions",
+  labels, lwd=2, lty=c(1, 1, 2), col=colors)
+
+
+
+```
+
+```
+As degrees of freedom increase, t-distribution approaches the standard normal distribution, which means that the area near the center increases while the area near the tails decreases. This happens because we use "n-1"as the degree of freedom in the sample distribution. Thus, as sample size gets larger, the sample approaches the normal distribution.
+```
+
+
+
+
+
+2. A code line is provided to load the marathon data set into your **R** workspace. Check your work by printing the `head` of the data frame and seeing that it matches with the commented lines provided.
+
+```{r p2q4, eval = TRUE} 
+
+# Load the data
+runner_data <- read.csv("rocknroll_marathon_mf2015.csv", header = TRUE)
+
+# > head(runner_data)
+#   ID Gender Time.Format Place Time.Seconds     MPH
+# 1  1      1     5:49:48  2475        20988 4.49721
+# 2  2      1     5:19:25  2232        19165 4.92499
+# 3  3      1     4:40:16  1635        16816 5.61296
+# 4  4      1     4:15:36  1121        15336 6.15464
+# 5  5      1     4:19:16  1204        15556 6.06759
+# 6  6      1     5:29:49  2327        19789 4.76970
+
+head(runner_data)
+```
+```
+The 'head' of the data frame matches with the commented lines provided.
+```
+
+3. In this question we'll do some preliminary checks on the data set.
+
+    a. Write code to make a boxplot of this data. Title it "Full Data". Be sure to label the appropriate axes.
+    b. Are there any clear outliers? If you think there are, write whether or not you would like to remove them, and if so, a possible (real-life) explanation for why this might be justified. 
+    c. If you identified outliers, remove them from the data set (hint: First select a threshold value and subset the full data set by keeping only times below this threshold.). Then remake the boxplot and title it "Outliers Removed". (If no outliers, attempt Part (b) again.)
+    
+```{r p2q5, eval = TRUE} 
+
+# Load the data
+runner_data <- read.csv("rocknroll_marathon_mf2015.csv", header = TRUE)
+
+boxplot(runner_data, main = "Full Data",col = "darkgrey")
+
+
+RemoveOutlier<-runner_data[runner_data$Time.Seconds<800000,]
+boxplot(RemoveOutlier,main="Outlier Removed",xlab="",ylab="",col="darkgrey")
+
+```
+```
+According to the first boxplot, there are some outliers in the Time.Seconds. Those outliers should be removed because they  will influence mean and standard deviation. In the real life some runners might have personal circumstances or physical injured which result in a much long time.
+```
+
+4. In this question we'll explore basic calculations with the Normal distribution, and investigate the Normality of the data set.
+
+    a. Calculate the mean and standard deviation of all runners' times. Store them in variables called `xbarT` and `sT`, and print them in the output.
+    b. Suppose runners' times were *in truth* Normally distributed with parameters $\bar x$ and $s$ from part a. Standardize the data (i.e., find z-scores) and create an appropriate plot to check for Normality.
+    c. Repeate steps a.-b. for the females and males separately.
+    d. What do the Q-Q plots tell us about our ability to do inference on this data set? 
+    
+```{r p2q6, eval = TRUE} 
+#a
+# Load the data
+runner_data <- read.csv("rocknroll_marathon_mf2015.csv", header = TRUE)
+
+xbarT=mean(RemoveOutlier$Time.Seconds)
+sT=sd(RemoveOutlier$Time.Seconds)
+
+xbarT
+sT
+
+```
+
+```{r}
+#b
+
+zs<-(RemoveOutlier$Time.Seconds-xbarT)/sT
+qqnorm(zs,main="Distribution of All Runners without outlier")
+abline(0,1)
+```
+
+```{r}
+#c
+male<-RemoveOutlier[RemoveOutlier$Gender=="2",]
+xbarMale<- mean(male$Time.Seconds)
+sdMale<- sd(male$Time.Seconds)
+zsMale<-(male$Time.Seconds-xbarMale)/sdMale
+qqnorm(zsMale,main = "All male runners' time")
+abline(0,1)
+xbarMale
+sdMale
+
+female<-RemoveOutlier[RemoveOutlier$Gender=="1",]
+xbarFemale<- mean(female$Time.Seconds)
+sdFemale<- sd(female$Time.Seconds)
+zsFemale<-(female$Time.Seconds-xbarFemale)/sdFemale
+qqnorm(zsFemale,main = "All female runners' time")
+abline(0,1)
+xbarFemale
+sdFemale
+```
+
+```
+#d From the Q-Q plot, we can see that the time seconds are nearly normal in data of male and female and the full data when removing outliers. 
+```
+
+5. We conclude the assignment with some standard analyses on the data set as a whole.
+
+    a. Compute the 95% confidence interval for the mean race time of females. In a comment box, write the explicit interpretation of this confidence interval. 
+```{r}
+#a
+nf=nrow(female)
+t1=-qt(0.025,nf-1)
+upperFemale=xbarFemale-sdFemale/(sqrt(nf))*t1
+lowerFemale=xbarFemale+sdFemale/(sqrt(nf))*t1
+print(upperFemale)
+print(lowerFemale)
+```
+```
+We are 95% confident that the mean of the female race time falling in to the interval (16341.22,16614.07).
+```
+    b. Can we reject the null hypothesis that $\mu_F = 16,500$ seconds at significance level $\alpha = 0.05$? Explain how you can know the answer without actually calculating the test statistic ***Hint: it has to do with your answer to part (a)***.
+```
+The null hypothes is that $\mu_F = 16,500$.We fail to reject it because the null hypothesis is within the confidence intervel in part (a) since the 95% confidence interval and significance level alpha = 0.05.
+```
+    c. Letting $\mu_F$ be the mean race time for females and $\mu_M$ the mean race time for males, compute the p-value for the hypotheses:
+  \[
+  H_0:\mu_F = \mu_M \;\;\text{vs.}\;\; H_a:\mu_F\ne\mu_M
+  \]
+  Assume that $\sigma_F$ and $\sigma_M$ are unknown and may differ. Print the p-value under its calculation.
+```{r}
+nm=nrow(male)
+SE = sqrt(sdFemale^2/nf+sdMale^2/nm)
+p_value = 2*pt((xbarMale-xbarFemale)/SE, min(nf,nm)-1)
+print(p_value)
+
+```
+    d. Compute the 99\% confidence interval for $\mu_F - \mu_M$. To calculate your degrees of freedom, use the smaller of the two sample sizes. Print the confidence interval after its calculation.
+```{r}
+t2=-qt(0.005,min(nf,nm)-1)
+
+lowerT=(xbarFemale-xbarMale)+(sqrt(sdFemale^2/nf+sdMale^2/nm))*t2
+upperT=(xbarFemale-xbarMale)-(sqrt(sdFemale^2/nf+sdMale^2/nm))*t2
+
+#The 99% confidence interval
+print(lowerT)
+print(upperT)
+```
+    e. In a comment box, write a few sentences interpreting the results of your data analyses in this problem.
+  
+```
+According to part (c), we can reject the null hypothesis at significance level alpha = 0.01. Thus, there is overwhelming evidence that supports the alternative hypothesis that the mean times of females and males are not the same.
+```
+
+
+
+
+
+<br><br>  
+  
+##ANOVA  
+In the next problem, we are going to use Analysis of Variance (ANOVA) to reach the same conclusion that was reached in Number 5 regarding the difference of means between males and females.
+
+a. First do `head(runner_data)` to remind yourself of the variable names.
+```{r}
+head(runner_data)
+```
+
+b. Then make side-by-side boxplots of run times for men and women. The general form for this is `boxplot(response ~factor, data=data_name)` where 'response' is the variable we are plotting (run times in seconds in our case) and 'factor' is the categorical variable that separates the data into groups whose means we are comparing. Finally 'data_name' is our data set. ***be sure you are using runner_data with the outliers removed.***
+c. Be fancy and go back and put labels on the two boxplots in Part (b). You can use `?boxplot` in the console to see how. You many find the vector `c("men","women")` useful.
+```{r}
+male<-RemoveOutlier[RemoveOutlier$Gender=="2",]
+female<-RemoveOutlier[RemoveOutlier$Gender=="1",]
+gender=c("Female","Male")
+boxplot(Time.Seconds~Gender,data=RemoveOutlier, names=gender, ylab="Time.Seconds", main="Boxplot_male and female ",col="darkgrey")
+```
+
+d. The Analysis of variance command works somewhat similarly. The general form is `aov(response ~factor, data=data_name)`. Assign this command to the variable `ANOVA` and type `ANOVA` to see the two sources of variability and respective degrees of freedom. 
+```{r}
+ANOVA=aov(Time.Seconds~Gender, data=RemoveOutlier)
+
+ANOVA
+```
+
+e. Which number describes ***Between Group*** variability and which describes ***Within Group Variability***. (Use a comment box below.) You may notice that the `aov` command output uses the terms ***Model*** and ***Residuals***. This is because the origin of the command is in ***Linear Regression***, our next topic.
+```
+SSG, which is 822299996, describes the between Group variability.
+SSE, which is 1441469830,describes the within Group variability.
+```
+f. To see the F-statistic and F-test results, you will have to use `summary(ANOVA)`. In your answer box below, state the F-statistic and its p-value. 
+```{r}
+summary(ANOVA)
+```
+```
+F-statistics is 142.3 and p-value is 2e-16.
+```
+g. Are we able to conclude that the average marathon run times of men and women are different? Explain. 
+```
+Yes.According to the data, when p-value is less than 1%, the alternative hypothesis that average marathon run time of male and female are quite different.
+```
+h. What is the lowest level of significance at which we could conclude men and women have different avarage marathon run times?
+```
+The lowest level of significance is the p-value: 2e-16.
+```

@@ -1,0 +1,193 @@
+# Multi-linear regression.
+
+**Created by Robin Cunningham, UNC Chapel Hill**
+
+***HOMEWORK 13 - Predicting Baby-weight***
+
+#Amanda Liu PID:730042603
+<br><br>
+A Multi-linear regression analysis. **Please compose all answers in this R-Markdown document**.
+<br><br>
+1. A file containing data on 1236 live births can be found at
+'https://drive.google.com/open?id=0B2lwGKhIFjYYbDY3eWVubEZzX28'. We will use this dataset to construct a multi-linear model for predicting birthweight from other variables.
+<br><br>
+a. Write and execute code to read the csv file 'babies.csv', assign it to the object 'babies' and summarize the variables.
+```{r, eval=TRUE}
+babies= read.csv("babies.csv")
+summary(babies)
+```
+<br>
+b. As you can see, there are 8 variables and a fair number of missing data points. Remove all cases with missing data and assign the resulting data frame to 'bbycomp'.
+```{r, eval=TRUE}
+bbycomp=na.omit(babies)
+summary(bbycomp)
+```
+<br>
+c. A **Dataset Codebook** is a guide to what each of the variables represents. Note that for the purpose of this study, we will consider each variable to be numerical. Complete the comment box below to create a codebook for these data. Include units if you can figure them out.
+```
+Variables:
+i. Case - (numerical) provide the index for the observation
+ii. bwt - (numerical) the baby weight for each individual
+iii. gestation - (numerical) the time period between conception and birth in days
+iv. parity - (numerical) whether the mother has had a child before. Yes=1 and No=0
+v. age - (binary) the age of the female to give birth to the baby
+vi. height - (numerical) the height of the mother in inches
+vii. weight - (numerical) the weight of mother in lbs
+viii. smoke - (binary) whether the female smokes before giving birth to the baby. smoke=1, not smoke=0
+
+```
+<br>
+d.Do some exploratory analysis by looking at histograms of the 7 variables and plots of bwt versus each of the six explanatory variables. In the comment box below, make a note of any concerns. ***It will save some typing to assign the right variables to `Y, X1, ..., X6`, so I did that for you.***
+```{r, eval = TRUE}
+
+#Assign Short variable names
+Y<- bbycomp$bwt
+X1 <- bbycomp$gestation
+X2 <- bbycomp$parity
+X3 <- bbycomp$age
+X4 <- bbycomp$height
+X5 <- bbycomp$weight
+X6 <- bbycomp$smoke
+
+#Histograms
+hist(Y)
+hist(X1)
+hist(X2)
+hist(X3)
+hist(X4)
+hist(X5)
+hist(X6)
+
+#Plots of Y versus X_i
+plot(X1,Y)
+plot(X2,Y)
+plot(X3,Y)
+plot(X4,Y)
+plot(X5,Y)
+plot(X6,Y)
+```
+```
+Comments:
+Hist(X1) shows that the majority of the data is between 260 and 300.
+Hist(X3) and Hist(X5)is right-skewed.
+Hist(X4) is approximately normal.
+Hist(X2) and Hist(X6) shows that they are binary variables.
+plot(X1,Y) shows the data have outliers at both sides.
+plot(X4,Y) shows the data might have outliers at the left.
+plot(X5,Y) shows the data have outliers at the right.
+```
+<br>
+e. Run the full model using all of the other variables (besides Case) to explain Birthweight (bwt). Store the model as `full.lm` and create a summary of the model.
+```{r, eval=TRUE}
+full.lm = lm(Y~X1+X2+X3+X4+X5+X6)
+summary(full.lm)      
+```
+<br>
+f. Use the summary to conduct an ANOVA test to see if at least one of the coefficients is significantly different from zero. State the results in the comment box below.
+```{r}
+null_fit= lm(Y~1)
+anova(null_fit,full.lm)
+```
+
+```
+H0: All coefficients of the predictors equal zero.
+Ha: At least one of the coefficients of the predictors does not equal zero.
+Result: We can the null hypothesis because the p-value is too small, which means at least one of the coefficients is different from zero.
+
+```
+g. Now perform backward elimination in the following manner: First, eliminate the predictor whose removal causes the greatest improvement in adjusted R-squared. Continue in this manner until removing any remaining predictors causes Adjusted R-squared to fall. <br>
+Begin by finding the 5-predictor model that increases adjusted R-squared by the most. Include the model and summary in the codebox below.
+```{r, eval=TRUE}
+adj5.lm = lm(Y~X1+X2+X4+X5+X6)
+summary(adj5.lm)
+```
+<br>
+h. Should we stick with the 6-predictor model or continue? Explain.
+```
+We should use 5 predictor model by removing X3 in order to increase adjusted R-squared, the which is the predicting value.
+```
+<br>
+i. Now find the best 4-variable model using the same criterion and include it in the code box below. Include a summary of the model.
+```{r, eval=TRUE}
+adj4.lm = lm(Y~X1+X2+X4+X6)
+summary(adj4.lm)
+```
+<br>
+j. According to the Adj. R-squared criterion, should we stick with 5-predictors or continue? Explain.
+```
+Yes. We should stick with 5-predictors. Because no 4-predictor model has higher adjusted R-squared than the chosen 5-predictor model.
+```
+***Note: even though our criterion says to stick with 5 predictors, I would seriously consider dropping X5 anyway, because the p-value is very close to 0.05 and we have lots of predictors. (Think about why having lots of predictors matters for this!) Also, the value of Adjusted R-squared is only reduced slightly and a parsimonious model is easier to understand and more robust for predictions***
+k. Using the best 5-predictor model that you found, find a 95% confidence interval for the average birthweight among all babies for which (gestation, parity, age, height, weight, smoke) = (290, 1, 22, 60, 110, 0). (One line of code will do it.)
+```{r, eval= TRUE}
+bb=data.frame(X1=290,X2= 1, X4=60, X5=110, X6=0)
+predict(adj5.lm, bb,interval = 'confidence')
+```
+<br>
+l. Using the best 5-predictor model that you found, find a 95% confidence interval for the birthweight of the next baby for which (gestation, parity, age, height, weight, smoke) = (290, 1, 22, 60, 110, 0). (Again, don't make it hard ... one line.)
+```{r, eval= TRUE}
+bb=data.frame(X1=290,X2= 1, X4=60, X5=110, X6=0)
+predict(adj5.lm, bb,interval = 'predict')
+```
+<br>
+m. In plain English, interpret the coefficients in the least squares model for `height` and `smoke`.
+```
+Height: For each unit of increase or decrease of height of babies' mother, the babies' weight will increase or decrease by 1.15497 ounces while other predictors are remaining the same.
+Smoke: The baby with a smoking mother will weigh 8.39390 ounces less than the baby with a not smoking mother while other predictors are remaining the same.
+```
+<br><br>
+2. Run diagnostics on the final 5-predictor model you selected. Include appropriate residual plots and your comments on the quality and usefulness of the fit. (Make your own codeboxes and comment boxes.)
+```{r}
+plot(adj5.lm)
+```
+```
+Residuals vs Fitted: The plot are roughly distributed by y=0 while 405, 493 and 1006 are significat outliers which make the curve down.
+Normal QQ plot shows that the residuals are normally distributed while 405, 493 and 1006 are still significat outliers
+Scale-Location clearly shows outliers which are 405, 493 and 1006.
+Residuals vs Leverage shows the influence of outliers: 1139 turns the predicting curve down and 239 turns the predicting curve up.
+As we can see, the model predicts the majority of the data well.
+```
+<br><br>
+3. In the plots you created before doing any regressions, there were apparent outliers with regard to both X1 and X4. Without doing the work, say what steps you would take to evaluate whether we should consider removing these outliers. (Your own comment box.)
+```
+To plot the residuals vs each predictor can help to see if there are significant outliers. Then if there are some outliers, we can remove it and re-run the model to see if influential. 
+```
+<br><br>
+4. Using `Forward Addition`, choose a "best" multilinear model for this data set. Begin by choosing the single predictor that gives the highest value of Adjusted R-squared and continue by adding variables until Adjusted R-squared has been maximized. ***Your answer should consist of a set of nested models with increasing Adjusted R-squared***
+```{r}
+forward1=lm(Y~X1)
+summary(forward1)
+
+forward2=lm(Y~X1+X6)
+summary(forward2)
+
+forward3=lm(Y~X1+X6+X4) 
+summary(forward3)
+
+forward4=lm(Y~X1+X6+X4+X2)
+summary(forward4)
+
+forward5=lm(Y~X1+X6+X4+X2+X5)
+summary(forward5)
+```
+
+<br><br>
+5. For the sequence of nested models above, conduct an ANOVA test comparing each model to the previous, reduced model to see if the new coefficient is statistically different from zero compared to the reduced model. Show the code for each test and state the results.
+```{r}
+anova(forward1,forward2)
+
+anova(forward2,forward3)
+
+anova(forward3,forward4)
+
+anova(forward4,forward5)
+```
+```
+1 vs 2: p-value is very small so we reject the null hypothesis which means that two-predictor model is a significant improvement from one-predictor model.
+
+2 vs 3: p-value is very small so we reject the null hypothesis which means that three-predictor model is a significant improvement from two-predictor model.
+
+3 vs 4:p-value is very small so we reject the null hypothesis which means thatfour-predictor model is a significant improvement from three-predictor model.
+
+4 vs 5:p-value is very small so we reject the null hypothesis which means that five-predictor model is a significant improvement from four-predictor model.
+```

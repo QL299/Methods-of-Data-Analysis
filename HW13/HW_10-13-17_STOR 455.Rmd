@@ -1,0 +1,208 @@
+# Homework 11 Assigned 10/13/17
+
+**Created by Robin Cunningham, UNC Chapel Hill**
+
+output: html_document
+
+Intro to Multiple Linear Regression
+
+#Amanda LIU
+#730042603
+-------------------------
+<br><br>
+***GPA Data Set***
+
+
+*We will use this exercise to compare the regression coefficients that we find by solving the Normal Equations (Slide 9 of Lecture 5) to the Output from using `lm` to find the regression coefficients.*
+
+
+1. Get the data set "College GPA.csv" and put it in your working directory along with this document and the console of R-Studio. Note that all of the code boxes below are set to `eval=FALSE` so that your file will *knit* but you will need to change this to put out your answers.
+<br><br>
+a. Read in the GPA file and assign it to the handy name provided.Then go ahead and print it so you have it for reference.
+    ```{r q1_load, eval = TRUE}
+gpa <- read.csv("College GPA.csv")
+gpa
+    ```
+b. Create each of the Matrices, X, Y, and Beta_hat that you will need to solve the normal equations.
+    \[
+       X\hat{B} =Y
+    \]
+Begin by defining variables 
+    \[
+       Y = First year GPA
+    \]
+    \[
+       X1 = Math SAT
+    \]
+    \[
+       X2 = Verbal SAT
+    \]
+    \[
+       X3 = HS Math GPA
+    \]
+    \[
+       X4 = HS English GPA.
+    \]
+Then initialize a Beta_hat vector of all zeros and the appropriate length.
+    ```{r q1a, eval = TRUE}
+n <- nrow(gpa)
+n
+
+Y<- c(gpa$First.Yr.GPA)
+X1 <- c(gpa$Math.SAT)
+X2 <- c(gpa$Verbal.SAT)
+X3 <- c(gpa$HS.Math.GPA)
+X4 <- c(gpa$HS.English.GPA)
+Beta_hat = numeric(length = 5)
+Beta_hat
+    ```
+b. We have our variables now, but they are all stored as vectors and we must convert them to matrices. Use `cbind` to create the matrix X. You will need to create a vector of 1's of the appropriate length first. Also, use the `matrix` command to turn Y and Beta_hat into matrices with the correct dimensions. After you have made them, go ahead and print (with labels) all three Matrices for the normal equations with labels.
+    ```{r, eval=TRUE}
+
+Beta_hatm= matrix(Beta_hat,nrow=5,byrow=TRUE)
+Beta_hatm
+
+
+matrixY = matrix(Y, nrow = n, ncol=1)
+matrixY
+
+ X= matrix(1,nrow=n,ncol=5)
+ X[,2]=X1
+ X[,3]=X2
+ X[,4]=X3
+ X[,5]=X4
+ X
+    ```
+
+<br>
+c. Calculate the least squares values of Beta_hat.  In the calculation of the least squares values, I recommend calculating X^tX first, then the inverse, then Beta_hat.
+<br>
+I went ahead and wrote the code to print out the Beta_i values after they are calculated.
+```{r, eval=FALSE}
+X_TRANSX = t(X)%*%X
+Inverse = solve(X_TRANSX)
+Beta_hat = Inverse%*%t(X)%*%Y
+Beta_hat
+
+labels = matrix(c("Beta_0", "Beta_1", "Beta_2", "Beta_3", "Beta_4"), nrow = 5)
+beta_summary <- cbind(labels, Beta_hat)
+beta_summary
+```
+d. Now that you know how `lm` calculates these coefficients, it is ok to use `lm` directly to calculate the least-squares statistics. Do that here and assign the model to the name gpa.mlr. Then get the summary output of the model.
+    ```{r, eval=TRUE}
+gpa.mlr=lm(Y~X1+X2+X3+X4,data=gpa)
+summary(gpa.mlr) 
+    
+    ```
+    <br>
+e. How do your estimates of the parameters compare to R's?(Comment box below)
+
+```
+They are the same.
+```
+f. Interpret each of the regression paramaters in words. That is, explain what each value means in terms of the scenario.
+```
+beta1<-When the other scores remains the same, each unit of increase OR decrease in MATH SAT score will result in a student’s college GPA estimates to be increase OR decrease 0.0020102.
+
+beta2<-When the other scores remains the same, each unit of increase OR decrease in Verbal SAT score will result in a student’s college GPA estimates to be increase OR decrease 0.0012522.
+
+beta3<-When the other scores remains the same, each unit of increase OR decrease in high school Math GPA will result in a student’s college GPA estimates to be increase OR decrease 0.1894402.
+
+beta4<-When the other scores remains the same, each unit of increase OR decrease in high school Verbal GPA will result in a student’s college GPA estimates to be increase OR decrease 0.0875637.
+
+beta0<-When a student has scored 0 on all of the SAT Math, SAT Verbal, High Schhol Math GPA, High School Verbal GPA, he would then have a estimate college GPA of 0.1615496.
+```
+g. Find a 95% confidence interval for $\beta_4$.(Use either a code-box, a comment box, or both to hold your answer.)
+<br>
+```{r}
+df= 15
+t=qt(0.975,df)
+
+se=0.1764963
+pe=0.0875637
+upper=pe+se*t
+upper
+lower=pe-se*t
+lower
+```
+```
+The 95% confidence interval for beta4 is (-0.2886293,0.4637567).
+```
+h. For a new individual with
+<br>
+MSAT = 640<br>
+VSAT = 540<br>
+HSM = 3.8<br>
+HSE = 3.2<br>
+What is your best estimate for their 1st-year gpa? 
+<br> Please use R to give your answer.
+```{r}
+GPA=640*0.0020102+540*0.0012522+3.8*0.1894402+3.2*0.0875637+0.1615496
+GPA
+```
+
+
+i. For the person described in Part (h), find a 95% confidence interval for their 1st-year gpa. (Note that s^2 is given in the R output of the linear model.)
+```{r}
+df= 15
+t=qt(0.975,df)
+
+s=0.2685
+x=matrix(c(1,640,540,3.8,3.2),byrow = TRUE)
+C=solve(t(X)%*%X)
+se= s*sqrt(t(x)%*%C%*%x)
+upper=GPA+se*t
+upper
+lower=GPA-se*t
+lower
+```
+```
+The 95% confidence interval for the 1st-year GPA of the person is (2.92872,3.319964).
+```
+
+j. We should have done this to start the regression analysis, but make plots of Y versus each of the predictors (4 plots) and discuss what you see. (Try to get everything into this RMarkdown document. No paper this time.)
+```{r}
+plot(X1,Y)
+plot(X2,Y)
+plot(X3,Y)
+plot(X4,Y)
+```
+```
+1) Y increasing with the increase of X1, which is good.
+2) Y roughly increase with the increase of X2, which is good.
+3) Y roughly increase with the increase of X3. The data was mainly gathered at score higher than 3.0.  This would affect the regression model.
+4) It is hard to see a relationship between two parameter. X4 might be a less effective predictors.
+```
+
+k. Makes histograms of each of the variables to see if there are any obvious outliers or other odd behavior. Print the histograms and any comments.
+```{r}
+hist(Y)
+hist(X1)
+hist(X2)
+hist(X3)
+hist(X4)
+```
+```
+1)The data of first year gpa is evenly spread at each range. Nothing strange.
+2)The data of MATH SAT score is roughly evenly spread at each range.
+3)There are not much data of SAT verbal score at the range (200,300) and (700.,800), which will affect the regression model.
+4)There are not much students scored lower than 3.0 at high school MATH gpa. 
+5)This is strange because there are a lot of students scored around 3.5 on high school verbal GPA, which might become an outlier phenomenon that affect the model.
+```
+
+l. Plot residuals versus fitted values (Y-hat_i) and the QQ plot of residuals. It is ok to use `lm` for this. Include any comments on what these diagnostic plots indicate.
+```{r}
+plot(gpa.mlr,which=1:2)
+```
+```
+1)Residuals vs fitted values: The data's residuals are roughly spread evenly among y=0. But we can see that data 12 and 2 include some outliers influencing the overall model.
+2)QQ plot: The reisduals are almost normally distributed, but there are a few outliers:data 2, 12, and 14.
+```
+m. Find a 95% prediction interval for the individual described in Part (h) above. It is ok to use R's `predict` function for this. Interpret the result in terms of the scenario.
+```{r}
+student=data.frame(X1=640,X2=540,X3=3.8,X4=3.2)
+predict(gpa.mlr,student,interval="predict")
+```
+```
+We have 90% of the probability of the true underlying distribution on the mean score of GPA of all the students with those valuse would be in (2.519538,3.729157).
+```
